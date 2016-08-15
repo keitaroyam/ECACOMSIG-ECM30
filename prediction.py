@@ -20,13 +20,13 @@ class Predictions:
         # Line 2
         sp = fin.readline().split() # starting frame & angle, osc. range, rotation axis
         self.starting_frame, self.starting_angle, self.osc_range = int(sp[0]), float(sp[1]), float(sp[2])
-        m2 = numpy.array(map(float, sp[3:6]))
+        m2 = numpy.array(map(float, sp[3:6])) # rotation axis
 
         # Line 3
         sp = fin.readline().split() # wavelength & incident beam direction
         self.wavelength = float(sp[0])
         incident_beam = numpy.array(map(float, sp[1:4]))
-        self.s0 = incident_beam / numpy.linalg.norm(incident_beam) / self.wavelength
+        self.s0 = incident_beam / numpy.linalg.norm(incident_beam) / self.wavelength # |S0| = 1/lambda
 
         m = numpy.empty(dtype=numpy.float, shape=(3,3)) # (m1 m2 m3) matrix
         m[:,1] = m2 / numpy.linalg.norm(m2)
@@ -90,23 +90,20 @@ class Predictions:
         ps_m[:,1] = p0s_m[:,1]
         ps_m[:,0] = p0s_lensq - ps_m[:,1]**2 - ps_m[:,2]**2 # sqrt after check
 
-        sel_ok = ps_m[:,0] > 0
-        
+        sel_ok = ps_m[:,0] > 0 # No solution (blind region) if < 0
         h, p0s_m, ps_m = h[sel_ok], p0s_m[sel_ok], ps_m[sel_ok]
         ps_m[:,0] = numpy.sqrt(ps_m[:,0])
         
-        get_phi = lambda x1,x3: numpy.arctan2(p0s_m[:,2]*x1 - p0s_m[:,0]*x3, # sin(phi)
-                                              p0s_m[:,0]*x1 + p0s_m[:,2]*x3) # cos(phi)
-
         self.predicted_hkl = numpy.empty((0, 3), dtype=numpy.int) # h,k,l
         self.predicted_data = numpy.empty((0, 4)) # x, y, phi, zeta
 
         for p1sign in (+1, -1):
             ps_m[:,0] *= p1sign
-            phi = get_phi(ps_m[:,0], ps_m[:,2])
-            e1 = numpy.cross(ps_m, s0_m)
-            e1 /= numpy.linalg.norm(e1, axis=1)[:,numpy.newaxis]
-            zeta = numpy.abs(e1[:,1]) # as e1 is expressed in m1,m2,m3 system
+            phi = numpy.arctan2(p0s_m[:,2]*ps_m[:,0] - p0s_m[:,0]*ps_m[:,2], # sin(phi) rho^2
+                                p0s_m[:,0]*ps_m[:,0] + p0s_m[:,2]*ps_m[:,2]) # cos(phi) rho^2
+            e1_m = numpy.cross(ps_m, s0_m)
+            e1_m /= numpy.linalg.norm(e1_m, axis=1).reshape(e1_m.shape[0], 1)
+            zeta = e1_m[:,1] # as e1_m is expressed in m1,m2,m3 system (zeta = m2 . e1)
 
             s = s0 + numpy.dot(ps_m, m.transpose())
             s_d = numpy.dot(s, d) # S vector with d1,d2,d3 basis
@@ -120,11 +117,11 @@ class Predictions:
 
     # calc_centroids()
 
-    def get_predicted_positions(self, sigmar, frame, esd_factor=3.5):
+    def get_predicted_positions(self, sigma_m, frame, esd_factor=3.5):
         phi = self.starting_angle + self.osc_range * (frame - self.starting_frame + 0.5) # Is this correct?
         print "  Phi at frame %d = %.3f" % (frame, phi)
         
-        phi, sigmar = numpy.deg2rad([phi, sigmar])
+        phi, sigma_m = numpy.deg2rad([phi, sigma_m])
 
         phi_calc = self.predicted_data[:,2]
         zeta = self.predicted_data[:,3]
@@ -133,7 +130,7 @@ class Predictions:
         phi_diff[phi_diff < -numpy.pi] += 2.*numpy.pi
         phi_diff[phi_diff > numpy.pi] -= 2.*numpy.pi
 
-        sel = numpy.abs(phi_diff) < esd_factor * sigmar / zeta
+        sel = numpy.abs(phi_diff) < esd_factor * sigma_m / numpy.abs(zeta)
         return self.predicted_hkl[sel], self.predicted_data[sel]
     # get_predicted_positions()
 
@@ -144,7 +141,7 @@ if __name__ == "__main__":
 
     xparm_in = sys.argv[1]
     d_min = float(sys.argv[2])
-    sigma_r = float(sys.argv[3])
+    sigma_m = float(sys.argv[3])
     frames = map(int, sys.argv[4:])
 
     
@@ -159,7 +156,7 @@ if __name__ == "__main__":
     
     for frame in frames:
         print "Calculating the predictions on frame %d.." % frame
-        pindices, pdata = preds.get_predicted_positions(sigma_r, frame)
+        pindices, pdata = preds.get_predicted_positions(sigma_m, frame)
 
         ofs = open("prediction_%.6d.adx" % frame, "w")
         for (h,k,l), (x, y, phi, zeta) in zip(pindices, pdata):
