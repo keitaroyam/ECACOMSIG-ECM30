@@ -12,3 +12,28 @@ Before the tutorial, you need to install
    * You can use phenix.python if you installed [phenix-1.10.1](https://www.phenix-online.org/)
 * [XDS and generate_XDS.INP](http://strucbio.biologie.uni-konstanz.de/xdswiki/index.php/Installation)
 * [Adxv](http://www.scripps.edu/tainer/arvai/adxv.html)
+
+## How to run the script
+1. Get sample data
+<pre>
+mkdir th_8_2
+wget https://zenodo.org/record/10271/files/th_8_2.tar.bz2
+tar xvf th_8_2.tar.bz2
+</pre>
+2. Prepare and edit XDS.INP, and run XDS (Alternatively, you can use XPARM.XDS in this repository)
+<pre>
+mkdir xds
+cd xds
+generate_XDS.INP “../th_8_2_0???.cbf”
+vi XDS.INP # Edit SPOT_RANGE= 1 27   JOB= XYCORR INIT COLSPOT IDXREF
+xds_par
+</pre>
+3. Run the script
+<pre>
+phenix.python prediction.py ./XPARM.XDS 1.5 0.06928 1
+# Usage:      prediction.py [XPARM.XDS] [d_min] [mosaicity] [frame numbers..]
+</pre>
+4. User Adxv to open predictions
+<pre>
+adxv ../th_8_2_0001.cbf prediction_000001.adx
+</pre>
