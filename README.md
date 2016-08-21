@@ -20,7 +20,7 @@ mkdir th_8_2
 wget https://zenodo.org/record/10271/files/th_8_2.tar.bz2
 tar xvf th_8_2.tar.bz2
 </pre>
-2. Prepare and edit XDS.INP, and run XDS (Alternatively, you can use XPARM.XDS in this repository)
+2. Prepare XDS.INP and run XDS (Alternatively, you can use XPARM.XDS in this repository)
 <pre>
 mkdir xds
 cd xds
@@ -33,7 +33,7 @@ xds_par
 phenix.python prediction.py ./XPARM.XDS 1.5 0.06928 1
 # Usage:      prediction.py [XPARM.XDS] [d_min] [mosaicity] [frame numbers..]
 </pre>
-4. User Adxv to open predictions
+4. Use Adxv to see predictions with image
 <pre>
 adxv ../th_8_2_0001.cbf prediction_000001.adx
 </pre>
