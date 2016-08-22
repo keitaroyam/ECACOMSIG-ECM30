@@ -17,6 +17,7 @@ Before the tutorial, you need to install
 1. Get sample data
 <pre>
 mkdir th_8_2
+cd th_8_2
 wget https://zenodo.org/record/10271/files/th_8_2.tar.bz2
 tar xvf th_8_2.tar.bz2
 </pre>
@@ -24,7 +25,7 @@ tar xvf th_8_2.tar.bz2
 <pre>
 mkdir xds
 cd xds
-generate_XDS.INP “../th_8_2_0???.cbf”
+generate_XDS.INP "../th_8_2_0???.cbf"
 vi XDS.INP # Edit SPOT_RANGE= 1 27   JOB= XYCORR INIT COLSPOT IDXREF
 xds_par
 </pre>
