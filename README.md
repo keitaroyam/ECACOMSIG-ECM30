@@ -7,7 +7,7 @@ Reference paper: [W. Kabsch "Integration, scaling, space-group assignment and po
 
 Test data: [Thaumatin / Diamond Light Source I04 user training](https://zenodo.org/record/10271#.V6vChZOLRBz)
 
-Before the tutorial, you need to install
+If you want to run the script, you need to install
 * Python2.7 with [CCTBX](http://cctbx.sourceforge.net/) and [Numpy](http://www.numpy.org/) (1.8 or higher)
    * You can use phenix.python if you installed [phenix-1.10.1](https://www.phenix-online.org/)
 * [XDS and generate_XDS.INP](http://strucbio.biologie.uni-konstanz.de/xdswiki/index.php/Installation)

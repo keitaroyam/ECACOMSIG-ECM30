@@ -117,11 +117,11 @@ class Predictions:
 
     # calc_centroids()
 
-    def get_predicted_positions(self, sigma_m, frame, esd_factor=3.5):
+    def get_predicted_positions(self, sigma_m, frame, esd_factor=3):
         phi = self.starting_angle + self.osc_range * (frame - self.starting_frame + 0.5) # Is this correct?
         print "  Phi at frame %d = %.3f" % (frame, phi)
         
-        phi, sigma_m = numpy.deg2rad([phi, sigma_m])
+        phi, sigma_m, osc_range = numpy.deg2rad([phi, sigma_m, self.osc_range])
 
         phi_calc = self.predicted_data[:,2]
         zeta = self.predicted_data[:,3]
@@ -130,7 +130,8 @@ class Predictions:
         phi_diff[phi_diff < -numpy.pi] += 2.*numpy.pi
         phi_diff[phi_diff > numpy.pi] -= 2.*numpy.pi
 
-        sel = numpy.abs(phi_diff) < esd_factor * sigma_m / numpy.abs(zeta)
+        sel = numpy.abs(phi_diff) < osc_range/2. + esd_factor * sigma_m / numpy.abs(zeta)
+
         return self.predicted_hkl[sel], self.predicted_data[sel]
     # get_predicted_positions()
 
