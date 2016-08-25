@@ -74,7 +74,7 @@ class Predictions:
     def calc_centroids(self, indices):
         h = numpy.array(indices) # hkl in each row
         m, d, a, F = self.m_matrix, self.d_matrix, self.astar_matrix, self.detector_F
-        orgx, orgy = self.orgxy
+        x0, y0 = self.orgxy
         qx, qy = self.qxy
         s0 = self.s0
 
@@ -109,8 +109,8 @@ class Predictions:
             s_d = numpy.dot(s, d) # S vector with d1,d2,d3 basis
             sel_ok = F*s_d[:,2] > 0
             s_d, h_ok, phi, zeta = s_d[sel_ok], h[sel_ok], phi[sel_ok], zeta[sel_ok]
-            xdet = orgx + F*s_d[:,0]/s_d[:,2]/qx
-            ydet = orgy + F*s_d[:,1]/s_d[:,2]/qy
+            xdet = x0 + F*s_d[:,0]/s_d[:,2]/qx
+            ydet = y0 + F*s_d[:,1]/s_d[:,2]/qy
 
             self.predicted_hkl = numpy.row_stack([self.predicted_hkl, h_ok])
             self.predicted_data = numpy.row_stack([self.predicted_data, numpy.column_stack([xdet, ydet, phi, zeta])])
