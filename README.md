@@ -38,3 +38,20 @@ phenix.python prediction.py ./XPARM.XDS 1.5 0.06928 1
 <pre>
 adxv ../th_8_2_0001.cbf prediction_000001.adx
 </pre>
+
+## Note: to use ipython with phenix
+Probably there is an easier way, but..
+
+First, install easy_install and then ipython to phenix environment
+<pre>
+wget https://bootstrap.pypa.io/ez_setup.py
+phenix.python ez_setup.py
+phenix.python -c "from setuptools.command.easy_install import main; main()" ipython
+</pre>
+
+ipython can be started by:
+<pre>
+phenix.python $PHENIX/modules/cctbx_project/libtbx/command_line/ipython_shell_start.py
+</pre>
+
+Alternatively, ```libtbx.ipython``` command can be activated if you run ```$PHENIX/build/bin/libtbx.refresh```.
