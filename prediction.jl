@@ -1,6 +1,7 @@
 #=
 This is just directly translated from prediction.py.
 Not optimized for Julia (actually a bit slower than NumPy code).
+- As advised by Takanori, by not using mapslices and lambda expressions, calc_centroids() became about x2 faster (now a bit faster than NumPy code)
 =#
 
 using PyCall
@@ -102,10 +103,10 @@ function calc_centroids(xparm, h)
     qx, qy = xparm.qxy
     s0 = xparm.s0
 
-    p0s = *(h, a) # p0* vector in each row
-    p0s_m = *(p0s, m) # p0* with m1,m2,m3 basis
+    p0s = h * a # p0* vector in each row
+    p0s_m = p0s * m # p0* with m1,m2,m3 basis
 
-    s0_m = *(transpose(m), s0) # s0 with m1,m2,m3 basis
+    s0_m = transpose(m) * s0 # s0 with m1,m2,m3 basis
 
     p0s_lensq = sum(p0s.^2, 2) # |p0*|^2 = |p*|^2 #
 
@@ -125,12 +126,22 @@ function calc_centroids(xparm, h)
         ps_m[:,1] *= p1sign
         phi = atan2(p0s_m[:,3].*ps_m[:,1] - p0s_m[:,1].*ps_m[:,3], # sin(phi) rho^2
                     p0s_m[:,1].*ps_m[:,1] + p0s_m[:,3].*ps_m[:,3]) # cos(phi) rho^2
-        e1_m = mapslices(x->cross(x, s0_m), ps_m, 2) # OK??
+
+        e1_m = zeros(Float64, size(ps_m))
+        for i in 1:size(ps_m, 1)
+            e1_m[i,:] = cross(ps_m[i,:][:], s0_m)
+        end
+        
+            
         e1_m = e1_m ./ sqrt(sum(e1_m.^2, 2))
         zeta = e1_m[:,2] # as e1_m is expressed in m1,m2,m3 system (zeta = m2 . e1)
 
-        s = mapslices(x->x+s0, *(ps_m, transpose(m)), 2)
-        s_d = *(s, d) # S vector with d1,d2,d3 basis
+        s = ps_m * transpose(m)
+        for i in 1:size(ps_m, 1)
+            s[i,:] += s0'
+        end
+        #
+        s_d = s * d # S vector with d1,d2,d3 basis
         sel_ok = F*s_d[:,3] .> 0
         s_d, h_ok, phi, zeta = s_d[sel_ok,:], h[sel_ok,:], phi[sel_ok,:], zeta[sel_ok,:]
         xdet = x0 + F*s_d[:,1] ./ s_d[:,3]/qx
@@ -172,6 +183,8 @@ function main()
     indices = prep_indices(xp.unit_cell, xp.sgnum, d_min)
 
     println("Calculating the predicted centroids..")
+    #@time calc_centroids(xp, indices)
+    #@time calc_centroids(xp, indices)
     predicted_hkl, predicted_data = calc_centroids(xp, indices)
     
     for frame in frames
